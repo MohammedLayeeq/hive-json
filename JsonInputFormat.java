@@ -45,11 +45,12 @@ public class JsonInputFormat extends TextInputFormat {
 		private final DataOutputBuffer buffer = new DataOutputBuffer();
 
 		public JsonRecordReader(FileSplit split, JobConf jobConf) throws IOException {
-			// get configured values:
-			startTag = jobConf.get(START_TAG_KEY).getBytes("utf-8");
-			endTag = jobConf.get(END_TAG_KEY).getBytes("utf-8");
-			recordDelimiter = jobConf.get(RECORD_DELIMITER);
-			collectionDelimiter = jobConf.get(COLLECTION_DELIMITER);
+			// uncomment the below lines if you need to get the configuration from jobConf:
+			// startTag = jobConf.get(START_TAG_KEY).getBytes("utf-8");
+			// endTag = jobConf.get(END_TAG_KEY).getBytes("utf-8");
+			// recordDelimiter = jobConf.get(RECORD_DELIMITER);
+			// collectionDelimiter = jobConf.get(COLLECTION_DELIMITER);
+			
 			// open the file and seek to the start of the split:
 			start = split.getStart();
 			end = start + split.getLength();
