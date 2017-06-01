@@ -1,0 +1,15 @@
+{
+"id": "1",
+"bookname": "A", 
+"properties": {
+"subscription": 
+"1year",
+"unit": "3"}
+}
+{
+"id": "2",
+"bookname":"B",
+"properties":{
+"subscription": "2years",
+"unit": "5"}
+}
