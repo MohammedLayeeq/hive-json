@@ -14,10 +14,12 @@ import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TextInputFormat;
 
-import com.google.gson.Gson;
-
 /**
- * Reads JSON records that are balanced between start and end braces.
+ * This JsonInputFormat can read a multi-line JSON format. It is creating the
+ * record based on balancing of curly braces - { and }. So the content between
+ * first '{' to the balanced last '}' is considered as one complete record.
+ * 
+ * @author unayakdev
  */
 public class JsonInputFormat extends TextInputFormat {
 
@@ -32,25 +34,20 @@ public class JsonInputFormat extends TextInputFormat {
 
 		public static final String START_TAG_KEY = "jsoninput.start";
 		public static final String END_TAG_KEY = "jsoninput.end";
-		public static final String RECORD_DELIMITER = "jsoninput.recordelim";
-		public static final String COLLECTION_DELIMITER = "jsoninput.collectiondelim";
 
 		private byte[] startTag = "{".getBytes();
 		private byte[] endTag = "}".getBytes();
-		private String recordDelimiter = ",";
-		private String collectionDelimiter = "|";
 		private long start;
 		private long end;
 		private FSDataInputStream fsin;
 		private final DataOutputBuffer buffer = new DataOutputBuffer();
 
 		public JsonRecordReader(FileSplit split, JobConf jobConf) throws IOException {
-			// uncomment the below lines if you need to get the configuration from jobConf:
+			// uncomment the below lines if you need to get the configuration
+			// from JobConf:
 			// startTag = jobConf.get(START_TAG_KEY).getBytes("utf-8");
 			// endTag = jobConf.get(END_TAG_KEY).getBytes("utf-8");
-			// recordDelimiter = jobConf.get(RECORD_DELIMITER);
-			// collectionDelimiter = jobConf.get(COLLECTION_DELIMITER);
-			
+
 			// open the file and seek to the start of the split:
 			start = split.getStart();
 			end = start + split.getLength();
@@ -71,9 +68,7 @@ public class JsonInputFormat extends TextInputFormat {
 							key.set(fsin.getPos());
 							// create json record from buffer:
 							String jsonRecord = new String(buffer.getData(), 0, buffer.getLength());
-							// parse the json to text:
-							String txt = parseToString(jsonRecord);
-							value.set(txt);
+							value.set(jsonRecord);
 							return true;
 						}
 					} finally {
@@ -120,7 +115,7 @@ public class JsonInputFormat extends TextInputFormat {
 				if (withinBlock)
 					buffer.write(b);
 
-				// check if we're matching:
+				// check if we're matching start/end tag:
 				if (b == startTag[0]) {
 					count.incrementAndGet();
 					if (!withinBlock) {
@@ -132,28 +127,11 @@ public class JsonInputFormat extends TextInputFormat {
 						return true;
 					}
 				}
+
 				// see if we've passed the stop point:
 				if (!withinBlock && count.get() == 0 && fsin.getPos() >= end)
 					return false;
 			}
-		}
-
-		private String parseToString(String json) {
-			Gson gson = new Gson();
-			// create POJO based object from the json record:
-			Book book = gson.fromJson(json, Book.class);
-
-			// create a simple text based structure from json using configured
-			// delimiters:
-			StringBuilder result = new StringBuilder();
-			result.append(book.getId());
-			result.append(recordDelimiter);
-			result.append(book.getBookname());
-			result.append(recordDelimiter);
-			result.append(book.getProperties().getSubscription());
-			result.append(collectionDelimiter);
-			result.append(book.getProperties().getUnit());
-			return result.toString();
 		}
 
 	}
